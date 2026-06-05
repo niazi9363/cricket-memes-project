@@ -20,7 +20,7 @@ if FB_ACCESS_TOKEN:
     FB_ACCESS_TOKEN = FB_ACCESS_TOKEN.strip()
 
 POSTED_IDS_FILE = "posted_ids.txt"
-REDDIT_URL = "https://www.reddit.com/r/CricketShitpost/top/.rss?t=day"
+REDDIT_URL = "https://old.reddit.com/r/CricketShitpost/top/.rss?t=day"
 
 # Browser headers to avoid 403 blocks on residential IPs
 REDDIT_HEADERS = {
