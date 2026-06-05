@@ -115,32 +115,8 @@ def get_top_memes(posted_ids):
         print(f"[-] Exception occurred while parsing RSS: {e}")
         return []
 
-def download_image(url, post_id):
-    """Downloads the image locally and returns the temporary file path."""
-    # Determine the file extension
-    ext = ".jpg"
-    for possible_ext in [".png", ".gif", ".jpeg", ".jpg"]:
-        if url.lower().endswith(possible_ext):
-            ext = possible_ext
-            break
-            
-    temp_filename = f"temp_{post_id}{ext}"
-    try:
-        print(f"[*] Downloading image: {url}")
-        response = requests.get(url, headers=REDDIT_HEADERS, timeout=20)
-        if response.status_code == 200:
-            with open(temp_filename, 'wb') as f:
-                f.write(response.content)
-            return temp_filename
-        else:
-            print(f"[-] Failed to download image. Status: {response.status_code}")
-            return None
-    except Exception as e:
-        print(f"[-] Exception downloading image from {url}: {e}")
-        return None
-
-def post_photo_to_facebook(image_path, caption, dry_run=False):
-    """Posts a local image with a caption to the configured Facebook Page."""
+def post_photo_to_facebook(image_url, caption, dry_run=False):
+    """Posts an image via URL directly with a caption to the configured Facebook Page."""
     if not FB_PAGE_ID or not FB_ACCESS_TOKEN:
         print("[-] Error: FB_PAGE_ID or FB_ACCESS_TOKEN is missing in the environment.")
         return False
@@ -152,40 +128,28 @@ def post_photo_to_facebook(image_path, caption, dry_run=False):
         
     url = f"https://graph.facebook.com/v19.0/{FB_PAGE_ID}/photos"
     payload = {
+        "url": image_url,
         "caption": caption,
         "access_token": FB_ACCESS_TOKEN
     }
     
     try:
-        with open(image_path, 'rb') as img_file:
-            files = {
-                "source": img_file
-            }
-            print("[*] Uploading photo to Facebook Page...")
-            response = requests.post(url, data=payload, files=files, timeout=30)
-            res_json = response.json()
-            
-            if response.status_code == 200 and "id" in res_json:
-                print(f"[+] Post successful! Photo ID: {res_json['id']}")
-                return True
-            else:
-                print(f"[-] Facebook API Error: {res_json}")
-                return False
+        print("[*] Uploading photo via URL to Facebook Page...")
+        response = requests.post(url, data=payload, timeout=30)
+        res_json = response.json()
+        
+        if response.status_code == 200 and "id" in res_json:
+            print(f"[+] Post successful! Photo ID: {res_json['id']}")
+            return True
+        else:
+            print(f"[-] Facebook API Error: {res_json}")
+            return False
     except Exception as e:
         print(f"[-] Exception posting to Facebook: {e}")
         return False
 
-def clean_up_file(file_path):
-    """Safely deletes the temporary downloaded image file."""
-    if file_path and os.path.exists(file_path):
-        try:
-            os.remove(file_path)
-            print(f"[+] Cleaned up temporary file: {file_path}")
-        except Exception as e:
-            print(f"[-] Error deleting temporary file {file_path}: {e}")
-
 def run_meme_poster(dry_run=False):
-    """Orchestrates the meme fetching, downloading, posting, and cleanup process."""
+    """Orchestrates the meme fetching, posting, and ID saving process."""
     print("\n" + "="*50)
     print(f"[*] Cycle Started at {time.strftime('%Y-%m-%d %H:%M:%S')}")
     print("="*50)
@@ -202,28 +166,19 @@ def run_meme_poster(dry_run=False):
     for i, meme in enumerate(memes, 1):
         print(f"\n[{i}/{len(memes)}] Processing Meme ID: {meme['id']}")
         
-        # Download image
-        image_path = download_image(meme['url'], meme['id'])
-        if not image_path:
-            print(f"[-] Skipping meme {meme['id']} due to download failure.")
-            continue
-            
-        # Create caption with funny emojis and professional layout (no credits or bot signatures)
+        # Create caption with funny emojis and professional layout
         caption = (
             f"{meme['title']} 😂🏏\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n"
             f"#CricketMemes #CricketFans #MemeOfTheDay"
         )
         
-        # Post to Facebook Page
-        success = post_photo_to_facebook(image_path, caption, dry_run=dry_run)
+        # Post directly to Facebook Page using the Reddit image URL
+        success = post_photo_to_facebook(meme['url'], caption, dry_run=dry_run)
         
         # If successfully posted, save ID to avoid duplicates
         if success and not dry_run:
             save_posted_id(meme['id'])
-            
-        # Clean up the file
-        clean_up_file(image_path)
         
         # Subtle sleep between posts to prevent rapid api hit issues
         if i < len(memes):
