@@ -24,10 +24,7 @@ REDDIT_URL = "https://old.reddit.com/r/CricketShitpost/top/.rss?t=day"
 
 # Browser headers to avoid 403 blocks on residential IPs
 REDDIT_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept": "application/xml, application/xhtml+xml, */*",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Connection": "keep-alive"
+    "User-Agent": "script:cricket_memes_fb_bot:v1.0.0 (by /u/zohaibking9363)"
 }
 
 def load_posted_ids():
