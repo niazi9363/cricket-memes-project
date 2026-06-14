@@ -1,9 +1,9 @@
 name: Reddit Meme Poster Bot
 
 on:
-  schedule:
-    # Runs every 2 hours (at minute 0 of every 2nd hour)
-    - cron: '0 */2 * * *'
+  # schedule:
+  #   # Runs every 2 hours (at minute 0 of every 2nd hour)
+  #   - cron: '0 */2 * * *'
   workflow_dispatch: # Allows manual trigger from GitHub UI
 
 permissions:
